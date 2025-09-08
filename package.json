@@ -1,5 +1,5 @@
 {
-  "name": "@aocaptcha/sdk",
+  "name": "aocaptcha-sdk",
   "version": "0.1.0",
   "description": "A CAPTCHA protocol built on AO",
   "main": "dist/index.js",
