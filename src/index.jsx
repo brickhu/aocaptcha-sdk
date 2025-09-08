@@ -1,7 +1,17 @@
 
 import { render } from "solid-js/web";
-import { HB } from "./api/hb" 
+import { connect,createDataItemSigner } from "@permaweb/aoconnect/browser";
 import App from "./app"
+
+export const formatMessageTags = (tags) =>{
+  if(tags instanceof Array){
+    return tags.map(item=>{return {name:item[0],value:item[1]}})
+  }else{
+    const arr = Object.entries(tags)
+    return arr.map(item=>{return {name:item[0],value:item[1]}})
+  }
+}
+
 
 let _captcha_box
 render(() => <App ref={_captcha_box} />, document.body);
@@ -23,33 +33,33 @@ export class AoCaptcha {
   m = async (pid, tags, data) => {
     try {
       if (!this.wallet) { reject("missed wallet") }
-       this.hb = new HB({url: this.URL,wallet: this.wallet})
-      // const { message, result } = connect({
-      //   MODE: this.MODE,
-      //   MU_URL: this.MU_URL || "https://mu.ao-testnet.xyz",
-      //   CU_URL: this.CU_URL || "https://cu.ao-testnet.xyz",
-      //   GATEWAY_URL: this.GATEWAY_URL || "https://arweave.net"
-      // })
-      // const msgid = await message({
-      //   process: pid,
-      //   tags,
-      //   data: data || "",
-      //   signer: createDataItemSigner(this.wallet)
-      // })
-      // if (!msgid) { throw ("send message faild or canceled") }
-      // const res = await result({
-      //   message: msgid,
-      //   process: this.process,
-      // })
-
-      const res = await this.hb.send({
-        target : pid,
+      //  this.hb = new HB({url: this.URL,wallet: this.wallet})
+      const { message, result } = connect({
+        MODE: this.MODE,
+        MU_URL: this.MU_URL || "https://mu.ao-testnet.xyz",
+        CU_URL: this.CU_URL || "https://cu.ao-testnet.xyz",
+        GATEWAY_URL: this.GATEWAY_URL || "https://arweave.net"
+      })
+      const msgid = await message({
+        process: pid,
+        tags,
         data: data || "",
-        ...tags
-      },this.wallet)
+        signer: createDataItemSigner(this.wallet)
+      })
+      if (!msgid) { throw ("send message faild or canceled") }
+      const res = await result({
+        message: msgid,
+        process: this.process,
+      })
+
+      // const res = await this.hb.send({
+      //   target : pid,
+      //   data: data || "",
+      //   ...tags
+      // },this.wallet)
 
 
-      return res
+      // return res
     } catch (e) {
       throw (e)
     }
@@ -76,27 +86,28 @@ export class AoCaptcha {
       params['Action'] = "Request-Captcha"
       params['Recipient'] = params['Recipient'] || this.recipient 
       params['Request-Type'] = params['Request-Type'] || this.type
+      console.log(formatMessageTags(params))
 
-      const {id, outbox} = await this.m(this.process, params , "a aocaptcha request").catch(err => reject(err))
+      // const {id, outbox} = await this.m(this.process, params , "a aocaptcha request").catch(err => reject(err))
 
-      if(outbox?.["1"]) {
-        const { Data, ...r } = outbox?.["1"]
-        const request = {
-          id,
-          paths: Data && JSON.parse(Data),
-          timestamp: Number(r['Request-Time']),
-          duration: Number(r['Request-Duration']),
-          type: r['Captcha-Type'],
-          digits: Number(r["Captcha-Digits"]),
-          request_type : r["Request-Type"],
-          recipient : this.recipient
-        }
-        console.log('request sucessed: ', id);
-        this.latest_request = request
-        resolve(request)
-      }else{
-        throw new Error("fetch captcha faild.")
-      }
+      // if(outbox?.["1"]) {
+      //   const { Data, ...r } = outbox?.["1"]
+      //   const request = {
+      //     id,
+      //     paths: Data && JSON.parse(Data),
+      //     timestamp: Number(r['Request-Time']),
+      //     duration: Number(r['Request-Duration']),
+      //     type: r['Captcha-Type'],
+      //     digits: Number(r["Captcha-Digits"]),
+      //     request_type : r["Request-Type"],
+      //     recipient : this.recipient
+      //   }
+      //   console.log('request sucessed: ', id);
+      //   this.latest_request = request
+      //   resolve(request)
+      // }else{
+      //   throw new Error("fetch captcha faild.")
+      // }
       
 
     });

@@ -1,5 +1,5 @@
 import { omit, keys } from 'ramda'
-import { createSigner } from "@permaweb/aoconnect/browser";
+import { createSigner,connect } from "@permaweb/aoconnect/browser";
 // import { arGql } from "./argql";
 
 export const GQLUrls = {
@@ -168,6 +168,7 @@ export class HB {
     this.url = url || DEFAULT_HYPERBEAM_NODE_URL || import.meta.env.VITE_HYPERBEAM_URL
     this.wallet = wallet,
     this.gql_url = gql_url || DEFAULT_GQL_ENDPOINT
+
   }
   fetch = function (path, params) {
     return fetch(this.url + path, params).then(res => res?.ok && res?.json())
