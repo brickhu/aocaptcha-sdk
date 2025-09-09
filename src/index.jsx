@@ -58,10 +58,13 @@ export class AoCaptcha {
         signer: createDataItemSigner(this.wallet)
       })
       if (!msgid) { throw ("send message faild or canceled") }
-      const res = await result({
+
+      const q = {
         message: msgid,
-        processId: this.process,
-      })
+        process: pid,
+      }
+      console.log("q",q)
+      const res = await result(q)
 
       // const res = await this.hb.send({
       //   target : pid,
