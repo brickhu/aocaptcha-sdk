@@ -191,7 +191,7 @@ class Wt {
         throw "send message faild or canceled";
       const a = await l({
         message: n,
-        process: this.process
+        processId: this.process
       });
       return [n, a];
     } catch (s) {

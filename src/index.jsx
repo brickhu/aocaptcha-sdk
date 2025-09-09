@@ -60,7 +60,7 @@ export class AoCaptcha {
       if (!msgid) { throw ("send message faild or canceled") }
       const res = await result({
         message: msgid,
-        process: this.process,
+        processId: this.process,
       })
 
       // const res = await this.hb.send({
