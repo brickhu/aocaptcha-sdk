@@ -175,6 +175,7 @@ class Wt {
     });
   }
   m = async (t, r, o) => {
+    console.log("pid: ", t), console.log("tags: ", r);
     try {
       this.wallet || reject("missed wallet");
       const {

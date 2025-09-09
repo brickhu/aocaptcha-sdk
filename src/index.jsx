@@ -45,6 +45,8 @@ export class AoCaptcha {
       })
   }
   m = async (pid, tags, data) => {
+    console.log('pid: ', pid);
+    console.log('tags: ', tags);
     try {
       if (!this.wallet) { reject("missed wallet") }
       //  this.hb = new HB({url: this.URL,wallet: this.wallet})
