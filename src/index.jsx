@@ -1,7 +1,18 @@
 
 import { render } from "solid-js/web";
-import { connect,createDataItemSigner } from "@permaweb/aoconnect/browser";
+// // import { connect } from "@permaweb/aoconnect/browser";
+// import { HB, DEFAULT_HYPERBEAM_NODE_URL, DEFAULT_GQL_ENDPOINT } from "hbconnect"
+// import 
+
+// // export const DEFAULT_HYPERBEAM_NODE_URL = DEFAULT_HYPERBEAM_NODE_URL
+// // export const DEFAULT_GQL_ENDPOINT = DEFAULT_GQL_ENDPOINT 
+
 import App from "./app"
+import {AO } from "./api/hb" 
+// const GQLUrls = {
+//   goldsky: 'https://arweave-search.goldsky.com/graphql' ,
+//   arweave: 'https://arweave.net/graphql',
+// }
 
 export const formatMessageTags = (tags) =>{
   if(tags instanceof Array){
@@ -22,6 +33,8 @@ export const tagsArrayToObject = (arr) =>{
 
 
 
+
+
 let _captcha_box
 render(() => <App ref={_captcha_box} />, document.body);
 
@@ -37,40 +50,44 @@ export class AoCaptcha {
     this.GATEWAY_URL = options?.ao?.GATEWAY_URL || "https://arweave.net"
     this.MODE = options?.ao?.GATEWAY_URL || "legacy"
     this.URL = "http://node.arweaveoasis.com:8734"
-    this.ao = connect({
-        MODE: this.MODE,
-        MU_URL: this.MU_URL || "https://mu.ao-testnet.xyz",
-        CU_URL: this.CU_URL || "https://cu.ao-testnet.xyz",
-        GATEWAY_URL: this.GATEWAY_URL || "https://arweave.net"
-      })
+    this.hb = new AO ({
+      url : this.URL || "http://node.arweaveoasis.com:8734", 
+      wallet : this.wallet || options?.wallet,
+    })
+  //   this.ao = connect({
+  //       MODE: this.MODE,
+  //       MU_URL: this.MU_URL || "https://mu.ao-testnet.xyz",
+  //       CU_URL: this.CU_URL || "https://cu.ao-testnet.xyz",
+  //       GATEWAY_URL: this.GATEWAY_URL || "https://arweave.net"
+  //     })
   }
   m = async (pid, tags, data) => {
     try {
       if (!this.wallet) { reject("missed wallet") }
       //  this.hb = new HB({url: this.URL,wallet: this.wallet})
-      const { message, result } = this.ao
-      const msgid = await message({
-        process: pid,
-        tags,
-        data: data || "",
-        signer: createDataItemSigner(this.wallet)
-      })
-      if (!msgid) { throw ("send message faild or canceled") }
-
-      const q = {
-        message: msgid,
-        process: pid,
-      }
-      const res = await result(q)
-
-      // const res = await this.hb.send({
-      //   target : pid,
+      // const { message, result } = this.ao
+      // const msgid = await message({
+      //   process: pid,
+      //   tags,
       //   data: data || "",
-      //   ...tags
-      // },this.wallet)
+      //   signer: createDataItemSigner(this.wallet)
+      // })
+      // if (!msgid) { throw ("send message faild or canceled") }
+
+      // const q = {
+      //   message: msgid,
+      //   process: pid,
+      // }
+      // const res = await result(q)
+
+      const {id,body} = await this.hb.send({
+        target : pid,
+        data: data || "",
+        ...tags
+      },this.wallet)
 
 
-      return [msgid,res]
+      return [id,body]
     } catch (e) {
       throw (e)
     }

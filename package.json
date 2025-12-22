@@ -17,14 +17,14 @@
     "preview": "vite preview"
   },
   "peerDependencies": {
-    "@permaweb/aoconnect": "^0.0.90",
-    "solid-js": "^1.9.7",
+    "hbconnect": "github:brickhu/hbconnect",
     "ramda": "^0.31.3"
   },
   "devDependencies": {
-    "vite": "^7.0.0",
+    "solid-js": "^1.9.7",
+    "vite": "^6",
     "vite-plugin-css-injected-by-js": "^3.5.2",
-    "vite-plugin-solid": "^2.11.6"
+    "vite-plugin-solid": "^2.11.7"
   },
   "keywords": [
     "solidjs",
@@ -33,8 +33,5 @@
     "ui"
   ],
   "author": "Fei",
-  "license": "MIT",
-  "dependencies": {
-    
-  }
+  "license": "MIT"
 }

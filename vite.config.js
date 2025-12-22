@@ -5,6 +5,7 @@ import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
 export default defineConfig({
   plugins: [cssInjectedByJsPlugin(),solid()],
   build: {
+    outDir: 'dist',
     lib: {
       entry: "src/index.jsx",
       name: "AoCaptchaSDK",
