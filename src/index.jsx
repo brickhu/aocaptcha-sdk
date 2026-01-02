@@ -1,38 +1,24 @@
 
 import { render } from "solid-js/web";
-// // import { connect } from "@permaweb/aoconnect/browser";
-// import { HB, DEFAULT_HYPERBEAM_NODE_URL, DEFAULT_GQL_ENDPOINT } from "hbconnect"
-// import 
-
-// // export const DEFAULT_HYPERBEAM_NODE_URL = DEFAULT_HYPERBEAM_NODE_URL
-// // export const DEFAULT_GQL_ENDPOINT = DEFAULT_GQL_ENDPOINT 
-
 import App from "./app"
-import {AO } from "./api/hb" 
-// const GQLUrls = {
-//   goldsky: 'https://arweave-search.goldsky.com/graphql' ,
-//   arweave: 'https://arweave.net/graphql',
+import {connect,createSigner} from "https://unpkg.com/@permaweb/aoconnect@latest/dist/browser.js";
+
+// export const formatMessageTags = (tags) =>{
+//   if(tags instanceof Array){
+//     return tags.map(item=>{return {name:item[0],value:item[1]}})
+//   }else{
+//     const arr = Object.entries(tags)
+//     return arr.map(item=>{return {name:item[0],value:item[1]}})
+//   }
 // }
 
-export const formatMessageTags = (tags) =>{
-  if(tags instanceof Array){
-    return tags.map(item=>{return {name:item[0],value:item[1]}})
-  }else{
-    const arr = Object.entries(tags)
-    return arr.map(item=>{return {name:item[0],value:item[1]}})
-  }
-}
-
-export const tagsArrayToObject = (arr) =>{
-  let tags = {}
-  arr.map((item)=>{
-    tags[item.name] = item.value
-  })
-  return tags
-}
-
-
-
+// export const tagsArrayToObject = (arr) =>{
+//   let tags = {}
+//   arr.map((item)=>{
+//     tags[item.name] = item.value
+//   })
+//   return tags
+// }
 
 
 let _captcha_box
@@ -48,85 +34,67 @@ export class AoCaptcha {
     this.MU_URL = options?.ao?.MU_URL || "https://mu.ao-testnet.xyz",
     this.CU_URL = options?.ao?.CU_URL || "https://cu.ao-testnet.xyz",
     this.GATEWAY_URL = options?.ao?.GATEWAY_URL || "https://arweave.net"
-    this.MODE = options?.ao?.GATEWAY_URL || "legacy"
-    this.URL = "http://node.arweaveoasis.com:8734"
-    this.hb = new AO ({
-      url : this.URL || "http://node.arweaveoasis.com:8734", 
-      wallet : this.wallet || options?.wallet,
-    })
-  //   this.ao = connect({
-  //       MODE: this.MODE,
-  //       MU_URL: this.MU_URL || "https://mu.ao-testnet.xyz",
-  //       CU_URL: this.CU_URL || "https://cu.ao-testnet.xyz",
-  //       GATEWAY_URL: this.GATEWAY_URL || "https://arweave.net"
-  //     })
+    this.MODE = options?.ao?.MODE || "mainnet"
+    this.URL = options?.ao?.URL || "https://push.forward.computer",
+    this.SCHEDULER = options?.ao?.SCHEDULER || "n_XZJhUnmldNFo4dhajoPZWhBXuJk-OcQr5JQ49c4Zo"
+
   }
-  m = async (pid, tags, data) => {
-    try {
-      if (!this.wallet) { reject("missed wallet") }
-      //  this.hb = new HB({url: this.URL,wallet: this.wallet})
-      // const { message, result } = this.ao
-      // const msgid = await message({
-      //   process: pid,
-      //   tags,
-      //   data: data || "",
-      //   signer: createDataItemSigner(this.wallet)
-      // })
-      // if (!msgid) { throw ("send message faild or canceled") }
+  pushMsg = async (params,data,wallet) => {
+    const {request} = connect({
+        MODE: 'mainnet',
+        URL: this.URL || "https://push.forward.computer",
+        SCHEDULER : this.SCHEDULER || "n_XZJhUnmldNFo4dhajoPZWhBXuJk-OcQr5JQ49c4Zo",
+        signer: createSigner(wallet || this.wallet)
+      })
+      return await request({
+        path: `/${this.process}~process@1.0/push`,
+        target: this.process,
+        data,
+        method: 'POST',
+        'signing-format': 'ans104',
+        'accept-bundle': 'true',
+        'accept-codec': 'httpsig@1.0',
+        'require-codec': 'application/json',
+        ...params
+      })
 
-      // const q = {
-      //   message: msgid,
-      //   process: pid,
-      // }
-      // const res = await result(q)
-
-      const {id,body} = await this.hb.send({
-        target : pid,
-        data: data || "",
-        ...tags
-      },this.wallet)
-
-
-      return [id,body]
-    } catch (e) {
-      throw (e)
-    }
   };
   getLatestRequest() {
     return this.latest_request
   }
   request(params,wallet) {
-
     return new Promise(async (resolve, reject) => {
       const now = Date.now()
-      this.wallet = wallet || this.wallet
+      console.log("Requseting at " + now)
+      this.wallet = wallet
       this.recipient = params.recipient || params.Recipient  || this.recipient
       this.type = params['Request-Type'] || params?.type || params?.Type || this.type || "DEFAULT"
       if (!this.process) { reject("missed the captcha process id") }
       if (!this.recipient) { reject("missed the request process id") }
       if (!this.wallet) { reject("missed wallet") }
-
       if (this.latest_request && (now - this.latest_request?.timestamp) < this.latest_request.duration) {
         resolve(this.latest_request)
         return
       }
-
       params['Action'] = "Request-Captcha"
       params['Recipient'] = params['Recipient'] || this.recipient 
       params['Request-Type'] = params['Request-Type'] || this.type
       delete params.Type
       delete params.type
 
-      const tags = formatMessageTags(params)
+      const response = await this.pushMsg(params,"a aocaptcha request",wallet)
 
-      const [id, outbox] = await this.m(this.process, tags , "a aocaptcha request").catch(err => reject(err))
+      if(!response?.ok){
+        throw new Error("fetch captcha faild.")
+      }
+      
+      const {outbox} = await response?.json()
 
-      if(outbox?.Messages?.[0]) {
-        const { Data, Tags } = outbox?.Messages?.[0]
-        const r = tagsArrayToObject(Tags)
+      if(outbox?.[1]){
+        const r = outbox?.[1]
         const request = {
-          id,
-          paths: Data && JSON.parse(Data),
+          id: r['Request-Id'],
+          paths: r?.Data && JSON.parse(r.Data),
           timestamp: Number(r['Request-Time']),
           duration: Number(r['Request-Duration']),
           type: r['Captcha-Type'],
@@ -134,7 +102,8 @@ export class AoCaptcha {
           request_type : r["Request-Type"],
           recipient : this.recipient
         }
-        console.log('AoCaptcha Request Id : ', id);
+
+        console.log("request",request)
         this.latest_request = request
         resolve(request)
       }else{
@@ -146,7 +115,7 @@ export class AoCaptcha {
   verify(request, wallet) {
     return new Promise(async (resolve, reject) => {
       const now = Date.now()
-      this.wallet = wallet || this.wallet
+      this.signer = createSigner(wallet)
       if (!this.process) { reject("missed the captcha process id") }
       if (!request) { reject("missed request data.") }
       if (!request.paths) { reject("missed captcha data.") }
@@ -156,38 +125,38 @@ export class AoCaptcha {
       if (!this.wallet && !wallet) { reject("missed wallet") }
       _captcha_box.show(request, async(input) => {
         try {
-          const tags = formatMessageTags({
+          const params = {
             Action : "Verify-Captcha" ,
             ['Request-Id'] : request?.id,
             ["Pushed-For"] : request?.id,
             ["App-Name"] : "AoCaptcha"
-          })
-          const [ id,outbox ] = await this.m(this.process, tags, input).catch(err => reject(err))
-          const { Messages, Output } = outbox
-          // console.log('verify res: ', res);
-          // const hb = this.hb || new HB({url: this.URL})
-          // const result = await hb.fetch(`/${request?.recipient}~process@1.0/compute&id=${id}/results/serialize~json@1.0`)
-          if (Messages?.[0]) {
-            
-            const { Tags} = Messages?.[0]
-            const r = tagsArrayToObject(Tags)
+          }
+
+          const response = await this.pushMsg(params,input,wallet)
+          console.log('verify response: ', response);
+
+          if(!response?.ok){
+            throw new Error("fetch captcha faild.")
+          }
+          
+          const {outbox} = await response?.json()
+
+          if (outbox?.[1]) {
+            const r = outbox?.[1]
             const verification = {
               id: r['Verify-Id'] || id,
               request_id: r['Request-Id'],
               request_time: r["Request-Time"],
               request_type: r["Request-Type"],
               verified_time: r['Verified-Time'],
-              verified: true,
-              output: Output
+              verified: true
             }
             console.log('AoCaptcha Verified Id: ', verification?.id);
             this.latest_request = null
             resolve(verification)
-            return verification
           } else {
-            reject("verify failed")
             this.latest_request = null
-            throw ("failed")
+            throw ("verify failed")
           }
         } catch (err) {
           throw (err)

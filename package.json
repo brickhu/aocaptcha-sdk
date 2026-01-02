@@ -17,7 +17,6 @@
     "preview": "vite preview"
   },
   "peerDependencies": {
-    "hbconnect": "github:brickhu/hbconnect",
     "ramda": "^0.31.3"
   },
   "devDependencies": {
@@ -32,6 +31,9 @@
     "npm",
     "ui"
   ],
-  "author": "Fei",
-  "license": "MIT"
+  "author": "Feihu",
+  "license": "MIT",
+  "dependencies": {
+    "@permaweb/aoconnect": "^0.0.93"
+  }
 }

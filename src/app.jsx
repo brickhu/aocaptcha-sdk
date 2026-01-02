@@ -9,8 +9,9 @@ import Countdown from "./components/countdown"
 import Logo from "./components/logo"
 
 export default function App(props) {
+  let _clock
   let checkFn = null;
-  let cancelFn = null
+  let cancelFn = null;
   const [captcha,setCaptcha] = createSignal()
   const [visible, setVisible] = createSignal(false);
   const [verifying,setVerifying] =  createSignal(false)
@@ -38,8 +39,8 @@ export default function App(props) {
       })
       .finally(()=>setVerifying(false))
     }
-    
   }
+
 
   onMount(()=>{
     props?.ref({
@@ -55,7 +56,13 @@ export default function App(props) {
         })
       },
       close:(e)=>{
-        setVisible(false)
+        batch(()=>{
+          setVerifying(false)
+          setCaptcha(null)
+          setInput(null)
+          setError(null)
+          setVisible(false)
+        })
       }
     })
   })
@@ -102,9 +109,12 @@ export default function App(props) {
                 "font-size" : "0.8em",
                 "text-align" : "center",
                 "padding-top" : "0.2em"
-              }}>Expired in:<Countdown end={captcha()?.timestamp+captcha()?.duration}/></div>
+              }}>Expired in:<Countdown end={captcha()?.timestamp+captcha()?.duration} onTimeout={()=>{
+                setError("The captcha has been exipred!")
+              }}/></div>
             </div>
             <div class={css.foot}>
+              <Show when={!error()} fallback={<div className={css.error}>{error()}</div>}>
               <input 
                 class={css.input}
                 placeholder="input the code above"
@@ -138,6 +148,8 @@ export default function App(props) {
               >
                 {verifying()?<Spinner size={"2em"}/>:<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-dasharray="24" stroke-dashoffset="24" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M5 11l6 6l10 -10"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.86s" values="24;0"/></path></svg>}
               </button>
+
+              </Show>
             </div>
           </div>
           

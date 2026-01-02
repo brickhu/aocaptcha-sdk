@@ -1,7 +1,7 @@
-import * as aoconnect from "https://unpkg.com/@permaweb/aoconnect@latest/dist/browser.js";
+import * as aoconnect from "https://unpkg.com/@permaweb/aoconnect@0.0.92/dist/browser.js";
 const { createSigner, connect, createDataItemSigner } = aoconnect;
 
-export const DEFAULT_HYPERBEAM_NODE_URL = "http://forward.computer"
+export const DEFAULT_HYPERBEAM_NODE_URL = "https://push.forward.computer"
 
 export const GQLUrls = {
   goldsky: 'https://arweave-search.goldsky.com/graphql' ,
@@ -124,8 +124,8 @@ export class AO {
     this.gateWayUrl = params?.gateWayUrl || import.meta.env.VITE_GATEWAY_URL || "https://arweave.net";
     this.gqlUrl = import.meta.env.VITE_GQL_ENDPOINT || GQLUrls.arweave || GQLUrls.goldsky
     this.aoconnect = aoconnect.connect({
-      MODE : params?.wallet && params?.url? "mainnet" : "",
-      URL : params?.url || import.meta.env.VITE_HYPERBEAM_URL || "http://node.arweaveoasis.com:8734",
+      MODE : params?.url? "mainnet" : "lagacynet",
+      URL : params?.url || import.meta.env.VITE_HYPERBEAM_URL || "https://push.forward.computer",
       MU_URL: params?.cu || import.meta.env.VITE_MU_URL || "https://mu.ao-testnet.xyz",
       CU_URL: params?.mu || import.meta.env.VITE_CU_URL || "https://cu.ao-testnet.xyz",
       GATEWAY_URL: this.gateWayUrl,

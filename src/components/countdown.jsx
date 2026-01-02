@@ -14,6 +14,7 @@ export default props => {
    const updateClock = () => {
     const now = Date.now()
     const left = (props?.end - now) / 1000
+    if(left<=0) return
     setCountdown(left)
     frameid = requestAnimationFrame(updateClock);
   };
